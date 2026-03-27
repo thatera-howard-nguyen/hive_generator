@@ -35,7 +35,7 @@ class TypeAdapterGenerator extends GeneratorForAnnotation<HiveType> {
 
     var typeId = getTypeId(annotation);
 
-    var adapterName = getAdapterName(interface.name, annotation);
+    var adapterName = getAdapterName(interface.displayName, annotation);
     var builder = interface is EnumElement
         ? EnumBuilder(interface, getters)
         : ClassBuilder(interface, getters, setters);
@@ -78,15 +78,14 @@ class TypeAdapterGenerator extends GeneratorForAnnotation<HiveType> {
   Set<String> getAllAccessorNames(InterfaceElement interface) {
     var accessorNames = <String>{};
 
-    var supertypes = interface.allSupertypes.map((it) => it.element2);
+    var supertypes = interface.allSupertypes.map((it) => it.element);
     for (var type in [interface, ...supertypes]) {
-      for (var accessor in type.accessors) {
-        if (accessor.isSetter) {
-          var name = accessor.name;
-          accessorNames.add(name.substring(0, name.length - 1));
-        } else {
-          accessorNames.add(accessor.name);
-        }
+      for (var getter in type.getters) {
+        accessorNames.add(getter.displayName);
+      }
+      for (var setter in type.setters) {
+        var name = setter.displayName;
+        accessorNames.add(name.substring(0, name.length - 1));
       }
     }
 
@@ -100,7 +99,7 @@ class TypeAdapterGenerator extends GeneratorForAnnotation<HiveType> {
     var getters = <AdapterField>[];
     var setters = <AdapterField>[];
     for (var name in accessorNames) {
-      var getter = interface.lookUpGetter(name, library);
+      var getter = interface.lookUpGetter(name: name, library: library);
       if (getter != null) {
         var getterAnn =
             getHiveFieldAnn(getter.variable) ?? getHiveFieldAnn(getter);
@@ -108,14 +107,14 @@ class TypeAdapterGenerator extends GeneratorForAnnotation<HiveType> {
           var field = getter.variable;
           getters.add(AdapterField(
             getterAnn.index,
-            field.name,
+            field.displayName,
             field.type,
             getterAnn.defaultValue,
           ));
         }
       }
 
-      var setter = interface.lookUpSetter('$name=', library);
+      var setter = interface.lookUpSetter(name: '$name=', library: library);
       if (setter != null) {
         var setterAnn =
             getHiveFieldAnn(setter.variable) ?? getHiveFieldAnn(setter);
@@ -123,7 +122,7 @@ class TypeAdapterGenerator extends GeneratorForAnnotation<HiveType> {
           var field = setter.variable;
           setters.add(AdapterField(
             setterAnn.index,
-            field.name,
+            field.displayName,
             field.type,
             setterAnn.defaultValue,
           ));

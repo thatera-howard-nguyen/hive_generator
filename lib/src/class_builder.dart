@@ -1,10 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_generator/src/builder.dart';
 import 'package:hive_generator/src/helper.dart';
 import 'package:source_gen/source_gen.dart';
@@ -18,24 +15,26 @@ class ClassBuilder extends Builder {
     List<AdapterField> setters,
   ) : super(interface, getters, setters);
 
-  var hiveListChecker = const TypeChecker.fromRuntime(HiveList);
-  var listChecker = const TypeChecker.fromRuntime(List);
-  var mapChecker = const TypeChecker.fromRuntime(Map);
-  var setChecker = const TypeChecker.fromRuntime(Set);
-  var iterableChecker = const TypeChecker.fromRuntime(Iterable);
-  var uint8ListChecker = const TypeChecker.fromRuntime(Uint8List);
+  final hiveListChecker =
+      const TypeChecker.fromUrl('package:hive/hive.dart#HiveList');
+  final listChecker = const TypeChecker.fromUrl('dart:core#List');
+  final mapChecker = const TypeChecker.fromUrl('dart:core#Map');
+  final setChecker = const TypeChecker.fromUrl('dart:core#Set');
+  final iterableChecker = const TypeChecker.fromUrl('dart:core#Iterable');
+  final uint8ListChecker =
+      const TypeChecker.fromUrl('dart:typed_data#Uint8List');
 
   @override
   String buildRead() {
-    var constr =
-        interface.constructors.firstOrNullWhere((it) => it.name.isEmpty);
+    var constr = interface.constructors
+        .firstOrNullWhere((it) => (it.name ?? '').isEmpty);
     check(constr != null, 'Provide an unnamed constructor.');
 
     // The remaining fields to initialize.
     var fields = setters.toList();
 
     // Empty classes
-    if (constr!.parameters.isEmpty && fields.isEmpty) {
+    if (constr!.formalParameters.isEmpty && fields.isEmpty) {
       return 'return ${interface.name}();';
     }
 
@@ -49,7 +48,7 @@ class ClassBuilder extends Builder {
     return ${interface.name}(
     ''');
 
-    for (var param in constr.parameters) {
+    for (var param in constr.formalParameters) {
       var field = fields.firstOrNullWhere((it) => it.name == param.name);
       // Final fields
       field ??= getters.firstOrNullWhere((it) => it.name == param.name);
@@ -218,6 +217,5 @@ String _suffixFromType(DartType type) {
 }
 
 String _displayString(DartType e) {
-  var suffix = _suffixFromType(e);
-  return '${e.getDisplayString(withNullability: false)}$suffix';
+  return e.getDisplayString();
 }
