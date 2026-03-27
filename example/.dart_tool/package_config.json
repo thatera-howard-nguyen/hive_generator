@@ -249,9 +249,9 @@
     },
     {
       "name": "source_gen",
-      "rootUri": "file:///Volumes/kingston/cache/pub/hosted/pub.dev/source_gen-3.1.0",
+      "rootUri": "file:///Volumes/kingston/cache/pub/hosted/pub.dev/source_gen-4.2.2",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.9"
     },
     {
       "name": "source_helper",
