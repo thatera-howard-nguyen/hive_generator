@@ -18,24 +18,25 @@ class ClassBuilder extends Builder {
     List<AdapterField> setters,
   ) : super(interface, getters, setters);
 
-  var hiveListChecker = const TypeChecker.fromRuntime(HiveList);
-  var listChecker = const TypeChecker.fromRuntime(List);
-  var mapChecker = const TypeChecker.fromRuntime(Map);
-  var setChecker = const TypeChecker.fromRuntime(Set);
-  var iterableChecker = const TypeChecker.fromRuntime(Iterable);
-  var uint8ListChecker = const TypeChecker.fromRuntime(Uint8List);
+  var hiveListChecker =
+      const TypeChecker.typeNamed(HiveList, inPackage: 'hive');
+  var listChecker = const TypeChecker.typeNamed(List, inSdk: true);
+  var mapChecker = const TypeChecker.typeNamed(Map, inSdk: true);
+  var setChecker = const TypeChecker.typeNamed(Set, inSdk: true);
+  var iterableChecker = const TypeChecker.typeNamed(Iterable, inSdk: true);
+  var uint8ListChecker = const TypeChecker.typeNamed(Uint8List, inSdk: true);
 
   @override
   String buildRead() {
-    var constr =
-        interface.constructors.firstOrNullWhere((it) => it.name.isEmpty);
+    var constr = interface.constructors
+        .firstOrNullWhere((it) => it.name == null || it.name == 'new');
     check(constr != null, 'Provide an unnamed constructor.');
 
     // The remaining fields to initialize.
     var fields = setters.toList();
 
     // Empty classes
-    if (constr!.parameters.isEmpty && fields.isEmpty) {
+    if (constr!.formalParameters.isEmpty && fields.isEmpty) {
       return 'return ${interface.name}();';
     }
 
@@ -49,7 +50,7 @@ class ClassBuilder extends Builder {
     return ${interface.name}(
     ''');
 
-    for (var param in constr.parameters) {
+    for (var param in constr.formalParameters) {
       var field = fields.firstOrNullWhere((it) => it.name == param.name);
       // Final fields
       field ??= getters.firstOrNullWhere((it) => it.name == param.name);
@@ -218,6 +219,5 @@ String _suffixFromType(DartType type) {
 }
 
 String _displayString(DartType e) {
-  var suffix = _suffixFromType(e);
-  return '${e.getDisplayString(withNullability: false)}$suffix';
+  return e.getDisplayString();
 }
